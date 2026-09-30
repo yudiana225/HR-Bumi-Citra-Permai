@@ -1,26 +1,28 @@
 import React from 'react';
-import { Employee, SalaryRecord } from '../types';
-import { calculateSalary, formatRupiah } from '../utils/salaryCalculator';
-import { ShieldAlert, Download, Printer } from 'lucide-react';
+import { Company, Employee, SalaryRecord } from '../types';
+import { calculateSalary, formatRupiah, formatRupiahDecimal } from '../utils/salaryCalculator';
+import { Download, Printer } from 'lucide-react';
 import { generateSalarySlipPdfBlob } from '../services/gmailSender';
 
 interface SlipGajiDocumentProps {
   record: SalaryRecord;
   employee: Employee;
+  company: Company;
   showActions?: boolean;
 }
 
 export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
   record,
   employee,
+  company,
   showActions = true,
 }) => {
   const { items } = record;
   const calc = calculateSalary(items);
 
   const handleDownloadPdf = () => {
-    const { doc } = generateSalarySlipPdfBlob(record, employee);
-    const filename = `Slip_Gaji_${record.companyName.replace(/\s+/g, '_')}_${employee.name.replace(/\s+/g, '_')}_${record.period.replace(/\s+/g, '_')}.pdf`;
+    const { doc } = generateSalarySlipPdfBlob(record, employee, company);
+    const filename = `Slip_Gaji_${company.name.replace(/[^a-zA-Z0-9]/g, '_')}_${employee.name.replace(/[^a-zA-Z0-9]/g, '_')}_${record.period.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
     doc.save(filename);
   };
 
@@ -33,7 +35,7 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
       {showActions && (
         <div className="w-full max-w-4xl flex items-center justify-between mb-3 px-2 print:hidden">
           <div className="text-xs text-gray-500 font-medium">
-            Format Pratinjau Dokumen Resmi Standar PT. BUMI CITRA PERMAI
+            Format Dokumen Resmi Multi-Company (Sesuai Excel 2025 - Slip Gaji)
           </div>
           <div className="flex gap-2">
             <button
@@ -54,7 +56,7 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
         </div>
       )}
 
-      {/* Slip Gaji Canvas Card - Exact Match to the image reference */}
+      {/* Slip Gaji Canvas Card - Exact Match to the Excel template */}
       <div
         id="slip-gaji-preview-card"
         className="w-full max-w-4xl bg-white border-2 border-black p-6 md:p-8 text-black shadow-md font-sans text-xs md:text-sm select-text"
@@ -67,8 +69,8 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
             <div className="font-bold tracking-tight text-xs text-gray-900 uppercase">
               SLIP GAJI
             </div>
-            <div className="font-bold text-sm md:text-base text-black tracking-tight">
-              {record.companyName || 'PT. BUMI CITRA PERMAI'}
+            <div className="font-bold text-sm md:text-base text-black tracking-tight uppercase">
+              {company.name}
             </div>
             <div className="font-bold text-xs uppercase text-gray-900 border-b border-black pb-1.5 inline-block min-w-[280px]">
               {record.period}
@@ -89,14 +91,17 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
             </div>
           </div>
 
-          {/* Header Right: Confidential Box */}
-          <div className="text-center pt-1">
-            <div className="border border-black px-5 py-1.5 inline-block">
+          {/* Header Right: NO URUT & Confidential Box */}
+          <div className="text-center pt-0.5">
+            <div className="text-right text-[11px] font-bold text-gray-700 mb-1">
+              NO URUT : <span className="text-black text-xs font-mono">{employee.employeeNo}</span>
+            </div>
+            <div className="border border-black px-5 py-1.5 inline-block bg-white">
               <div className="text-red-600 font-bold text-xs tracking-wider">
-                CONFIDENTIAL
+                - CONFIDENTIAL -
               </div>
               <div className="text-red-600 font-bold text-xs tracking-wider">
-                RAHASIA
+                - RAHASIA -
               </div>
             </div>
             <div className="text-[10px] text-gray-800 font-medium mt-1 tracking-tight">
@@ -142,7 +147,7 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
             </div>
 
             <div className="flex justify-between items-center pr-2">
-              <span className="pl-3 text-gray-800">Transport</span>
+              <span className="pl-3 text-gray-800">Transp.</span>
               <span className="w-24 text-right font-medium">{formatRupiah(items.allowanceTransport)}</span>
             </div>
 
@@ -152,7 +157,7 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
             </div>
 
             <div className="flex justify-between items-center pr-2">
-              <span className="font-semibold text-gray-900">LEMBUR</span>
+              <span className="font-semibold text-gray-900">Lembur</span>
               <div className="flex items-center gap-4">
                 <span>:</span>
                 <span className="w-24 text-right font-medium">{formatRupiah(items.overtime)}</span>
@@ -160,26 +165,26 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
             </div>
 
             <div className="flex justify-between items-center pr-2">
-              <span className="font-semibold text-gray-900">OPERASIONAL</span>
+              <span className="font-semibold text-gray-900">Insentive</span>
               <div className="flex items-center gap-4">
                 <span>:</span>
-                <span className="w-24 text-right font-medium">{formatRupiah(items.operational)}</span>
+                <span className="w-24 text-right font-medium">{formatRupiah(items.incentive)}</span>
               </div>
             </div>
 
             <div className="flex justify-between items-center pr-2">
-              <span className="font-semibold text-gray-900">THR / BONUS</span>
+              <span className="font-semibold text-gray-900">Lain - Lain</span>
+              <div className="flex items-center gap-4">
+                <span>:</span>
+                <span className="w-24 text-right font-medium">{formatRupiah(items.otherIncome || items.operational)}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pr-2">
+              <span className="font-semibold text-gray-900">THR / Bonus</span>
               <div className="flex items-center gap-4">
                 <span>:</span>
                 <span className="w-24 text-right font-medium">{formatRupiah(items.bonusTHR)}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center pr-2">
-              <span className="font-semibold text-gray-900">PPh21</span>
-              <div className="flex items-center gap-4">
-                <span>:</span>
-                <span className="w-24 text-right font-medium">{formatRupiah(items.pph21Allowance)}</span>
               </div>
             </div>
           </div>
@@ -187,7 +192,7 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
           {/* Right Column: POTONGAN */}
           <div className="space-y-1 pl-4 border-l border-transparent">
             <div className="flex justify-between items-center">
-              <span className="text-gray-900">BPJS JHT</span>
+              <span className="text-gray-900">JAMSOSTEK / JHT (2%)</span>
               <div className="flex items-center gap-4">
                 <span>:</span>
                 <span className="w-24 text-right font-medium">{formatRupiah(items.deductionBPJSJHT)}</span>
@@ -195,18 +200,34 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-gray-900">BPJS Pensiun</span>
+              <span className="text-gray-900">BPJS 1% (Kesehatan)</span>
               <div className="flex items-center gap-4">
                 <span>:</span>
-                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionBPJSPensiun)}</span>
+                <span className="w-24 text-right font-medium">{formatRupiahDecimal(items.deductionBPJSKesehatan)}</span>
               </div>
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-gray-900">BPJS Kesehatan</span>
+              <span className="text-gray-900">BPJSTK Pensiun</span>
               <div className="flex items-center gap-4">
                 <span>:</span>
-                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionBPJSKesehatan)}</span>
+                <span className="w-24 text-right font-medium">{formatRupiahDecimal(items.deductionBPJSPensiun)}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-gray-900">PENGATURAN GAJI</span>
+              <div className="flex items-center gap-4">
+                <span>:</span>
+                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionSetting)}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-gray-900">UANG DIBAYAR DIMUKA</span>
+              <div className="flex items-center gap-4">
+                <span>:</span>
+                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionAdvance)}</span>
               </div>
             </div>
 
@@ -219,42 +240,26 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-gray-900">Pengaturan Gaji</span>
+              <span className="text-gray-900">TELAT</span>
               <div className="flex items-center gap-4">
                 <span>:</span>
-                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionSetting)}</span>
+                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionLate)}</span>
               </div>
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-gray-900">Upah dibayar dimuka</span>
+              <span className="text-gray-900">MANGKIR</span>
               <div className="flex items-center gap-4">
                 <span>:</span>
-                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionAdvance)}</span>
+                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionAbsence)}</span>
               </div>
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-gray-900">Telat</span>
+              <span className="text-gray-900">POT. PRIBADI / PPh21</span>
               <div className="flex items-center gap-4">
                 <span>:</span>
-                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionLateAbsence)}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-gray-900">MANGKIR / ALFA</span>
-              <div className="flex items-center gap-4">
-                <span>:</span>
-                <span className="w-24 text-right">-</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-gray-900">Pajak ditanggung Perusahaan</span>
-              <div className="flex items-center gap-4">
-                <span>:</span>
-                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionCompanyTax)}</span>
+                <span className="w-24 text-right font-medium">{formatRupiah(items.deductionOther || items.deductionCompanyTax)}</span>
               </div>
             </div>
 
@@ -274,14 +279,14 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
             <span>TOTAL PENERIMAAN</span>
             <div className="flex items-center gap-3">
               <span>Rp</span>
-              <span className="w-24 text-right">{formatRupiah(calc.totalEarnings)}</span>
+              <span className="w-24 text-right">{formatRupiahDecimal(calc.totalEarnings)}</span>
             </div>
           </div>
           <div className="flex justify-between items-center pl-4">
             <span>TOTAL POTONGAN</span>
             <div className="flex items-center gap-3">
               <span>Rp</span>
-              <span className="w-24 text-right">{formatRupiah(calc.totalDeductions)}</span>
+              <span className="w-24 text-right">{formatRupiahDecimal(calc.totalDeductions)}</span>
             </div>
           </div>
         </div>
@@ -295,25 +300,35 @@ export const SlipGajiDocument: React.FC<SlipGajiDocumentProps> = ({
             <div className="flex items-center gap-3">
               <span>Rp</span>
               <span className="border border-black px-2 py-0.5 w-24 text-right font-bold">
-                {formatRupiah(calc.takeHomePay)}
+                {formatRupiahDecimal(calc.takeHomePay)}
               </span>
             </div>
           </div>
 
-          <div className="flex justify-between items-center pr-2 text-xs py-0.5">
-            <span className="font-bold">TUNJANGAN CASH</span>
-            <div className="flex items-center gap-3 font-medium">
-              <span className="font-bold">Rp</span>
-              <span className="w-24 text-right">{formatRupiah(items.cashAllowance)}</span>
+          {items.rounding !== 0 ? (
+            <div className="flex justify-between items-center pr-2 text-xs py-0.5">
+              <span className="font-bold">PEMBULATAN</span>
+              <div className="flex items-center gap-3 font-medium">
+                <span className="font-bold">Rp</span>
+                <span className="w-24 text-right">{formatRupiah(items.rounding)}</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex justify-between items-center pr-2 text-xs py-0.5">
+              <span className="font-bold">TUNJANGAN CASH</span>
+              <div className="flex items-center gap-3 font-medium">
+                <span className="font-bold">Rp</span>
+                <span className="w-24 text-right">{formatRupiah(items.cashAllowance)}</span>
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-between items-center bg-[#E5E7EB] px-2 py-1 mt-1 text-xs font-bold">
-            <span className="tracking-wide">GRAND TOTAL</span>
+            <span className="tracking-wide">TOTAL (GRAND TOTAL)</span>
             <div className="flex items-center gap-3">
               <span>Rp</span>
               <span className="border-b-2 border-black w-24 text-right pb-0.5">
-                {formatRupiah(calc.grandTotal)}
+                {formatRupiahDecimal(calc.grandTotal)}
               </span>
             </div>
           </div>

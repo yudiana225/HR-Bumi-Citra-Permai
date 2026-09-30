@@ -1,44 +1,73 @@
+export interface Company {
+  id: string;
+  name: string;
+  code?: string;
+  address?: string;
+}
+
+export type EmployeeCategory = 
+  | 'KARYAWAN TETAP' 
+  | 'KARYAWAN KONTRAK' 
+  | 'OUTSOURCING' 
+  | 'PROBATION' 
+  | 'HARIAN LEPAS'
+  | 'DIREKSI & MANAGEMENT';
+
 export interface Employee {
   id: string;
+  employeeNo: number; // NO URUT (1, 2, 3, etc.)
+  companyId: string; // Foreign key to Company
   name: string;
   position: string;
   department?: string;
+  category: EmployeeCategory; // Kategori Karyawan
   email: string;
-  bankAccount: string;
+  bankAccount?: string;
   phone?: string;
-  joinDate?: string;
+  status: 'KARYAWAN TETAP' | 'KARYAWAN KONTRAK' | 'PROBATION' | 'HARIAN';
+  ptkpStatus?: string; // TK/0, K/0, K/1, etc.
+  gender?: 'L' | 'P';
+  startDate?: string;
+  endDate?: string;
+  dob?: string;
 }
 
 export interface SalaryItemDetail {
+  // Pendapatan (Earnings)
   baseSalary: number; // Gaji Pokok
-  allowanceJob: number; // Tunjangan Jabatan / Tetap
-  allowanceMeal: number; // Makan
-  allowanceTransport: number; // Transport
-  allowancePulse: number; // Pulsa
+  allowanceJob: number; // Tunjangan Tetap / Jabatan
+  allowanceMeal: number; // Tunjangan Makan
+  allowanceTransport: number; // Tunjangan Transport
+  allowancePulse: number; // Tunjangan Pulsa
   overtime: number; // Lembur
+  incentive: number; // Insentif
   operational: number; // Operasional
   bonusTHR: number; // THR / Bonus
-  pph21Allowance: number; // PPh21 (jika ditunjang)
+  otherIncome: number; // Lain - Lain
+  pph21Allowance: number; // PPh21 / Pajak (jika ditunjang)
 
-  // Potongan
-  deductionBPJSJHT: number; // BPJS JHT (misal ~114.598)
-  deductionBPJSPensiun: number; // BPJS Pensiun
-  deductionBPJSKesehatan: number; // BPJS Kesehatan (misal ~57.298)
+  // Potongan (Deductions)
+  deductionBPJSJHT: number; // JAMSOSTEK / JHT (2%)
+  deductionBPJSKesehatan: number; // BPJS 1% (Kesehatan)
+  deductionBPJSPensiun: number; // BPJSTK Pensiun (1%)
+  deductionCompanyTax: number; // PPh21 / Pajak Ditanggung
   deductionKasbon: number; // Kasbon Kantor
   deductionSetting: number; // Pengaturan Gaji
-  deductionAdvance: number; // Upah Dibayar Dimuka
-  deductionLateAbsence: number; // Telat / Mangkir / Alfa
-  deductionCompanyTax: number; // Pajak ditanggung Perusahaan / PPh21
+  deductionAdvance: number; // Uang Dibayar Dimuka
+  deductionLate: number; // Telat
+  deductionAbsence: number; // Mangkir / Alfa
+  deductionOther: number; // Pot. Pribadi / Lain-lain
 
-  // Tunjangan Cash
+  // Penyesuaian
+  rounding: number; // Pembulatan
   cashAllowance: number; // Tunjangan Cash
 }
 
 export interface SalaryRecord {
   id: string;
   employeeId: string;
-  period: string; // e.g. "AGUSTUS 2026"
-  companyName: string; // default: "PT. BUMI CITRA PERMAI"
+  companyId: string;
+  period: string; // e.g. "Oktober 2025", "Agustus 2026", "Januari 2026"
   items: SalaryItemDetail;
   notes?: string;
   sentAt?: string;
@@ -51,8 +80,16 @@ export interface SalaryRecord {
 export interface CalculatedSalary {
   totalEarnings: number;
   totalDeductions: number;
-  takeHomePay: number;
-  grandTotal: number;
+  takeHomePay: number; // Total Penerimaan - Total Potongan
+  grandTotal: number; // THP + Pembulatan + Tunjangan Cash
+}
+
+export interface PayrollPeriod {
+  id: string;
+  name: string; // e.g. "Oktober 2025"
+  month: number;
+  year: number;
+  isLocked: boolean;
 }
 
 export interface EmailLog {
@@ -60,6 +97,7 @@ export interface EmailLog {
   timestamp: string;
   recipientEmail: string;
   recipientName: string;
+  companyName: string;
   period: string;
   status: 'success' | 'failed';
   errorMessage?: string;
