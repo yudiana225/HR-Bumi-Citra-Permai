@@ -1,0 +1,6 @@
+{
+  "name": "PT Bumi Citra Permai - Dashboard Slip Gaji",
+  "description": "Dashboard manajemen data karyawan, perhitungan komponen upah dan potongan, serta generator dan pengiriman slip gaji otomatis via Gmail.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
